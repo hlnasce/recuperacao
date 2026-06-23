@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Simulado de Matemática</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a73e8;--dark:#1558b0;--danger:#d93025;
+  --success:#1e8e3e;--warn:#f9ab00;--bg:#f0f4f9;
+  --card:#fff;--text:#202124;--muted:#5f6368;--border:#dadce0;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text)}
+
+/* TELAS */
+.tela{display:none}
+.tela.ativa{display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+.header{
+  background:var(--primary);color:#fff;padding:16px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)
+}
+.header h1{font-size:1.15rem;font-weight:700}
+#timer{
+  background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);
+  border-radius:8px;padding:6px 16px;font-size:1.4rem;font-weight:700;
+  letter-spacing:2px;min-width:100px;text-align:center
+}
+#timer.amarelo{background:var(--warn);color:#202124;border-color:var(--warn)}
+#timer.vermelho{background:var(--danger);border-color:var(--danger);animation:pisca .8s infinite}
+@keyframes pisca{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* CENTRO */
+.centro{flex:1;display:flex;justify-content:center;align-items:center;padding:32px 16px}
+.topo{flex:1;display:flex;flex-direction:column;align-items:center;padding:32px 16px}
+
+/* CARD */
+.card{
+  background:var(--card);border-radius:12px;
+  box-shadow:0 2px 16px rgba(0,0,0,.1);
+  padding:40px;width:100%;max-width:620px
+}
+
+/* INPUTS */
+.label{display:block;font-weight:600;margin-bottom:6px;font-size:.95rem}
+input[type=text],input[type=password]{
+  width:100%;padding:12px 16px;border:2px solid var(--border);
+  border-radius:8px;font-size:1rem;outline:none;
+  margin-bottom:16px;background:#fff;font-family:inherit
+}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--primary)}
+
+/* BOTÕES */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:13px 28px;border:none;border-radius:8px;font-size:1rem;
+  font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .2s
+}
+.btn:hover{opacity:.88}
+.btn:active{transform:scale(.97)}
+.btn-azul{background:var(--primary);color:#fff}
+.btn-verde{background:var(--success);color:#fff}
+.btn-vermelho{background:var(--danger);color:#fff}
+.btn-borda{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+.btn-full{width:100%}
+
+/* INSTRUÇÕES */
+.lista-instr{list-style:none;margin:16px 0 28px}
+.lista-instr li{
+  display:flex;gap:14px;padding:12px 0;
+  border-bottom:1px solid var(--border);line-height:1.6
+}
+.lista-instr li:last-child{border-bottom:none}
+
+/* PROVA */
+#area-prova{flex:1;padding:24px 16px;max-width:800px;width:100%;margin:0 auto}
+.prog-txt{font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.prog-barra{background:var(--border);border-radius:99px;height:6px;margin-bottom:18px}
+.prog-fill{height:6px;background:var(--primary);border-radius:99px;transition:width .3s}
+.bolinhas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.bolinha{
+  width:30px;height:30px;border-radius:50%;background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;cursor:pointer;transition:background .2s
+}
+.bolinha.respondida{background:var(--primary);color:#fff}
+.bolinha.atual{outline:3px solid var(--dark);outline-offset:2px}
+
+/* QUESTÃO */
+.q-card{
+  background:var(--card);border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.07);
+  padding:28px 32px;margin-bottom:20px
+}
+.q-tag{font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.q-txt{font-size:1.05rem;line-height:1.75;margin-bottom:22px;font-weight:500}
+.alternativas{display:flex;flex-direction:column;gap:10px}
+.alt{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:13px 16px;border:2px solid var(--border);
+  border-radius:8px;cursor:pointer;line-height:1.5;
+  transition:border .15s,background .15s;user-select:none
+}
+.alt:hover{border-color:var(--primary);background:#e8f0fe}
+.alt.marcada{border-color:var(--primary);background:#e8f0fe}
+.letra{
+  width:30px;height:30px;min-width:30px;border-radius:50%;
+  background:var(--border);display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:.85rem;
+  transition:background .15s,color .15s
+}
+.alt.marcada .letra{background:var(--primary);color:#fff}
+
+.nav-prova{
+  display:flex;justify-content:space-between;
+  align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap
+}
+#contador{color:var(--muted);font-size:.9rem}
+.enviar-wrap{text-align:center;margin-top:28px}
+
+/* RESULTADO */
+.res-centro{text-align:center}
+.res-nota{font-size:3.8rem;font-weight:800;color:var(--primary);margin:12px 0}
+.res-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:20px 0}
+.res-box{text-align:center;padding:16px;border-radius:8px;background:var(--bg)}
+.res-box .v{font-size:1.8rem;font-weight:700}
+.res-box .l{font-size:.8rem;color:var(--muted);margin-top:4px}
+.verde{color:var(--success)}.vermelho{color:var(--danger)}
+
+/* DASHBOARD */
+#area-dash{flex:1;padding:24px 16px;max-width:1100px;width:100%;margin:0 auto}
+.dash-topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:24px}
+.stat{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center}
+.stat .v{font-size:1.9rem;font-weight:800;color:var(--primary)}
+.stat .l{font-size:.78rem;color:var(--muted);margin-top:4px}
+.tabela-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);min-width:680px}
+thead{background:var(--primary);color:#fff}
+th{padding:13px 14px;text-align:left;font-size:.85rem;white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.85rem}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8f9fa}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:700}
+.b-verde{background:#e6f4ea;color:var(--success)}
+.b-verm{background:#fce8e6;color:var(--danger)}
+.b-warn{background:#fef7e0;color:#b06000}
+
+/* OVERLAY */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.65);z-index:9999;
+  justify-content:center;align-items:center
+}
+.overlay.aberto{display:flex}
+.popup{
+  background:var(--card);border-radius:12px;padding:36px;
+  max-width:430px;width:92%;text-align:center;
+  box-shadow:0 8px 40px rgba(0,0,0,.3);animation:entra .25s ease
+}
+@keyframes entra{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.popup-icone{font-size:3.5rem;margin-bottom:14px}
+.popup h3{font-size:1.3rem;margin-bottom:10px}
+.popup p{color:var(--muted);margin-bottom:24px;line-height:1.65}
+.popup-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+.erro{color:var(--danger);font-size:.9rem;margin-bottom:12px;display:none}
+footer{text-align:center;padding:14px;color:var(--muted);font-size:.82rem}
+footer a{color:var(--primary);text-decoration:none}
+
+@media(max-width:600px){
+  .card{padding:24px 16px}
+  .q-card{padding:20px 14px}
+  .header h1{font-size:.9rem}
+  #timer{font-size:1rem;padding:5px 10px}
+  .res-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TELA LOGIN ═══ -->
+<div id="t-login" class="tela ativa">
+  <div class="centro">
+    <div class="card" style="text-align:center">
+      <div style="font-size:3.5rem;margin-bottom:12px">📐</div>
+      <h2 style="font-size:1.6rem;margin-bottom:6px">Simulado de Matemática</h2>
+      <p style="color:var(--muted);margin-bottom:28px">Nível Avançado — Álgebra e Funções</p>
+      <label class="label" style="text-align:left">Nome completo</label>
+      <input type="text" id="inp-nome" placeholder="Digite seu nome completo" autocomplete="off"/>
+      <label class="label" style="text-align:left">Turma / Série</label>
+      <input type="text" id="inp-turma" placeholder="Ex: 9º A" autocomplete="off"/>
+      <div id="erro-login" class="erro">Por favor, insira seu nome completo.</div>
+      <button class="btn btn-azul btn-full" onclick="irParaInstrucoes()">Continuar →</button>
+    </div>
+  </div>
+  <footer>© 2026 Simulado Online &nbsp;·&nbsp; <a href="#" onclick="irParaDashLogin();return false">Acesso do Professor</a></footer>
+</div>
+
+<!-- ═══ TELA INSTRUÇÕES ═══ -->
+<div id="t-instrucoes" class="tela">
+  <div class="header">
+    <h1>📐 Simulado de Matemática – Nível Avançado</h1>
+    <span id="nome-header" style="font-size:.9rem;opacity:.9"></span>
+  </div>
+  <div class="topo">
+    <div class="card">
+      <h2 style="margin-bottom:8px">📋 Instruções da Prova</h2>
+      <p>Leia com atenção antes de iniciar.</p>
+      <ul class="lista-instr">
+        <li><span style="font-size:1.3rem">⏱️</span><span><strong>Duração:</strong> 1 hora (60 minutos). O cronômetro inicia ao clicar em "Começar Prova".</span></li>
+        <li><span style="font-size:1.3rem">❓</span><span><strong>Questões:</strong> 20 questões de múltipla escolha com 4 alternativas cada.</span></li>
+        <li><span style="font-size:1.3rem">🔀</span><span><strong>Ordem aleatória:</strong> Questões e alternativas são embaralhadas a cada aplicação.</span></li>
+        <li><span style="font-size:1.3rem">🚫</span><span><strong>Anti-cola:</strong> Na <strong>primeira</strong> troca de aba você recebe um aviso. Na <strong>segunda</strong>, a prova é encerrada automaticamente.</span></li>
+        <li><span style="font-size:1.3rem">💾</span><span><strong>Envio:</strong> Ao fim do tempo a prova é enviada automaticamente.</span></li>
+        <li><span style="font-size:1.3rem">✅</span><span>Cada questão vale <strong>1 ponto</strong>. Total máximo: <strong>20 pontos</strong>.</span></li>
+      </ul>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-borda" onclick="irParaTela('t-login')">← Voltar</button>
+        <button class="btn btn-azul" onclick="iniciarProva()">🚀 Começar Prova</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA PROVA ═══ -->
+<div id="t-prova" class="tela">
+  <div class="header">
+    <h1>📐 Simulado de Matemática</h1>
+    <div id="timer">60:00</div>
+  </div>
+  <div id="area-prova">
+    <div class="prog-txt" id="prog-txt">Questão 1 de 20</div>
+    <div class="prog-barra"><div class="prog-fill" id="prog-fill" style="width:5%"></div></div>
+    <div class="bolinhas" id="bolinhas"></div>
+    <div id="questao-container"></div>
+    <div class="nav-prova">
+      <button class="btn btn-borda" id="btn-ant" onclick="navegar(-1)">← Anterior</button>
+      <span id="contador"></span>
+      <button class="btn btn-azul" id="btn-prox" onclick="navegar(1)">Próxima →</button>
+    </div>
+    <div class="enviar-wrap">
+      <button class="btn btn-verde" onclick="pedirEnvio()" style="min-width:200px">✅ Enviar Prova</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA RESULTADO ═══ -->
+<div id="t-resultado" class="tela">
+  <div class="centro">
+    <div class="card res-centro">
+      <div id="res-icone" style="font-size:3.5rem;margin-bottom:10px">🎉</div>
+      <h2 id="res-titulo">Prova Enviada!</h2>
+      <p style="margin-bottom:0">Obrigado, <strong id="res-nome"></strong>. Confira seu desempenho:</p>
+      <div class="res-nota" id="res-nota"></div>
+      <div class="res-grid">
+        <div class="res-box"><div class="v verde" id="res-acertos"></div><div class="l">Acertos</div></div>
+        <div class="res-box"><div class="v vermelho" id="res-erros"></div><div class="l">Erros</div></div>
+        <div class="res-box"><div class="v" id="res-branco"></div><div class="l">Em branco</div></div>
+      </div>
+      <p id="res-msg" style="font-weight:600;font-size:1.05rem;margin-top:4px"></p>
+      <p id="res-cancel" style="color:var(--danger);font-size:.9rem;margin-top:12px;display:none">
+        ⚠️ Prova encerrada por tentativa de acesso a outro site durante a avaliação.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA LOGIN DASHBOARD ═══ -->
+<div id="t-dash-login" class="tela">
+  <div class="centro">
+    <div class="card" style="text-align:center">
+      <div style="font-size:3rem;margin-bottom:14px">🔒</div>
+      <h2 style="margin-bottom:8px">Acesso do Professor</h2>
+      <p>Área restrita. Insira a senha para acessar os resultados.</p>
+      <label class="label" style="text-align:left">Senha</label>
+      <input type="password" id="inp-senha" placeholder="Digite a senha"
+             onkeydown="if(event.key==='Enter')entrarDash()"/>
+      <div id="erro-senha" class="erro">Senha incorreta. Tente novamente.</div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-borda" onclick="irParaTela('t-login')">← Voltar</button>
+        <button class="btn btn-azul" onclick="entrarDash()">Entrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA DASHBOARD ═══ -->
+<div id="t-dashboard" class="tela">
+  <div class="header">
+    <h1>📊 Dashboard – Resultados dos Alunos</h1>
+    <button class="btn btn-borda" style="color:#fff;border-color:rgba(255,255,255,.5)"
+            onclick="irParaTela('t-login')">Sair</button>
+  </div>
+  <div id="area-dash">
+    <div class="dash-topo">
+      <h2 style="font-size:1.2rem">Registro de Provas Realizadas</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-borda" onclick="exportarCSV()">📥 Exportar CSV</button>
+        <button class="btn btn-vermelho" onclick="limparDados()">🗑️ Limpar Dados</button>
+      </div>
+    </div>
+    <div class="dash-stats" id="dash-stats"></div>
+    <div class="tabela-wrap">
+      <table id="tabela">
+        <thead>
+          <tr>
+            <th>#</th><th>Aluno</th><th>Turma</th><th>Data/Hora</th>
+            <th>Tempo</th><th>Acertos</th><th>Erros</th><th>Branco</th>
+            <th>Nota</th><th>Status</th><th>Cola</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-body"></tbody>
+      </table>
+    </div>
+    <p id="dash-vazio" style="text-align:center;color:var(--muted);padding:48px;display:none">
+      Nenhuma prova registrada ainda.
+    </p>
+  </div>
+</div>
+
+<!-- ═══ POPUP AVISO COLA ═══ -->
+<div class="overlay" id="pop-aviso">
+  <div class="popup">
+    <div class="popup-icone">⚠️</div>
+    <h3>Atenção — Aviso Final!</h3>
+    <p>Foi detectada uma tentativa de trocar de aba ou acessar outro site.<br><br>
+    <strong>Esta é sua única chance.</strong> Se ocorrer novamente, sua prova será
+    <span style="color:var(--danger);font-weight:700">encerrada automaticamente</span>
+    com as respostas já dadas.</p>
+    <div class="popup-btns">
+      <button class="btn btn-vermelho" onclick="fecharAviso()">Entendi, voltar à prova</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ POPUP PROVA CANCELADA ═══ -->
+<div class="overlay" id="pop-cancelado">
+  <div class="popup">
+    <div class="popup-icone">🚫</div>
+    <h3>Prova Encerrada</h3>
+    <p>Segunda tentativa de acesso a outro site detectada.<br><br>
+    Sua prova foi <strong>encerrada e registrada automaticamente</strong>
+    com as respostas fornecidas até este momento.</p>
+    <div class="popup-btns">
+      <button class="btn btn-azul" onclick="verResultadoCancelado()">Ver meu resultado</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ POPUP CONFIRMAR ENVIO ═══ -->
+<div class="overlay" id="pop-envio">
+  <div class="popup">
+    <div class="popup-icone">📤</div>
+    <h3>Enviar Prova?</h3>
+    <p id="msg-envio"></p>
+    <div class="popup-btns">
+      <button class="btn btn-borda" onclick="fecharOverlay('pop-envio')">Revisar</button>
+      <button class="btn btn-verde" onclick="confirmarEnvio()">Confirmar Envio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   QUESTÕES
+════════════════════════════════════════ */
+var QUESTOES = [
+  {id:1, txt:"O custo de produção de uma fábrica é dado por C = 8,50x + 45, onde x é a quantidade de peças. Se em um determinado dia o custo total foi de R$ 342,50, quantas peças foram produzidas?", opts:["25","30","35","40"], gabarito:2},
+  {id:2, txt:"Em uma loja, um caderno custa R$ 15,00 e uma caneta custa R$ 4,00. Um estudante comprou uma certa quantidade de cadernos e o dobro dessa quantidade em canetas, pagando R$ 115,00. Quantos itens ele comprou ao todo?", opts:["5","10","15","20"], gabarito:2},
+  {id:3, txt:"O perímetro de um triângulo é 12x + 8. Dois lados medem 3x + 5 e 4x − 2. Qual é o terceiro lado?", opts:["5x + 5","5x − 5","7x + 3","19x + 11"], gabarito:0},
+  {id:4, txt:"O Plano A cobra R$ 80,00 fixos + R$ 1,20/min. O Plano B cobra R$ 50,00 fixos + R$ 2,70/min. A partir de quantos minutos o Plano A é mais econômico?", opts:["15 minutos","20 minutos","25 minutos","30 minutos"], gabarito:1},
+  {id:5, txt:"Uma corrida de táxi de 5 km custa R$ 25,00 e de 8 km custa R$ 34,00. Qual é o valor da bandeirada fixa?", opts:["R$ 3,00","R$ 8,00","R$ 10,00","R$ 12,00"], gabarito:2},
+  {id:6, txt:"As retas y = 3x − 4 e y = −2x + 11 se cruzam em qual ponto?", opts:["(2, 2)","(3, 5)","(4, 8)","(5, 1)"], gabarito:1},
+  {id:7, txt:"Qual valor de x satisfaz (2x − 3)/4 + (x + 1)/3 = 5?", opts:["4,5","5,0","6,5","7,0"], gabarito:2},
+  {id:8, txt:"P(x) = −2x² + 5x − 7. Qual é o valor de P(−3)?", opts:["−40","−10","10","26"], gabarito:0},
+  {id:9, txt:"A idade de um pai é o triplo da do filho. Daqui a 10 anos, a do pai será o dobro da do filho. Qual é a idade atual do pai?", opts:["30 anos","36 anos","42 anos","45 anos"], gabarito:0},
+  {id:10, txt:"Dimensões de um retângulo: 2x + 1 e x − 3. Perímetro = 56 cm. Qual é a área?", opts:["120 cm²","147 cm²","160 cm²","192 cm²"], gabarito:1},
+  {id:11, txt:"120 ingressos vendidos: adulto R$ 20,00 / criança R$ 10,00 — total R$ 1.900,00. Quantos ingressos de adulto?", opts:["50","60","70","80"], gabarito:2},
+  {id:12, txt:"A(1,2), B(3,8) e C(5,y) são colineares. Qual o valor de y?", opts:["10","12","14","16"], gabarito:2},
+  {id:13, txt:"A soma de três números pares consecutivos é 138. Qual é o maior?", opts:["44","46","48","50"], gabarito:2},
+  {id:14, txt:"Receita R = 40x, custo C = 15x + 1200. Quantidade mínima para lucro?", opts:["47","48","49","50"], gabarito:2},
+  {id:15, txt:"Simplificando (3x − 2)(2x + 5) − (x² − 4x + 1), obtemos:", opts:["5x² + 15x − 11","5x² + 7x − 11","7x² + 15x − 9","6x² + 11x − 10"], gabarito:0},
+  {id:16, txt:"Uma pessoa gastou 1/3 do salário com roupas e 1/4 com alimentação, sobrando R$ 250,00. Qual era o salário?", opts:["R$ 450,00","R$ 600,00","R$ 750,00","R$ 900,00"], gabarito:1},
+  {id:17, txt:"3(2x − 5) − 2(4x + 1) = −5(x − 2). Qual o valor de x?", opts:["5","7","9","11"], gabarito:2},
+  {id:18, txt:"A reta 3x − 4y = 24 cruza o eixo x em qual ponto?", opts:["(0, −6)","(8, 0)","(0, 8)","(−6, 0)"], gabarito:1},
+  {id:19, txt:"20 L de solução com 30% de álcool. Quantos litros de álcool puro adicionar para 50%?", opts:["5 litros","8 litros","10 litros","12 litros"], gabarito:1},
+  {id:20, txt:"f(x) = (x² − 3x) / (x + 1). Qual é f(4)?", opts:["0,5","0,8","1,2","1,5"], gabarito:1}
+];
+
+var SENHA_DASH = "somenteeupossoacessar";
+var LETRAS     = ["A","B","C","D"];
+var TEMPO_MAX  = 3600;
+
+/* ════════════════════════════════════════
+   ESTADO GLOBAL
+════════════════════════════════════════ */
+var nomeAluno   = "";
+var turmaAluno  = "";
+var baralho     = [];
+var respostas   = {};
+var questaoAtual = 0;
+var tempoRestante = TEMPO_MAX;
+var relogioID   = null;
+var provaAtiva  = false;
+var ncolas      = 0;
+var cancelada   = false;
+
+/* ════════════════════════════════════════
+   NAVEGAÇÃO ENTRE TELAS
+════════════════════════════════════════ */
+function irParaTela(id) {
+  var telas = document.querySelectorAll(".tela");
+  for (var i = 0; i < telas.length; i++) {
+    telas[i].classList.remove("ativa");
+  }
+  document.getElementById(id).classList.add("ativa");
+}
+
+/* ════════════════════════════════════════
+   TELA LOGIN → INSTRUÇÕES
+════════════════════════════════════════ */
+function irParaInstrucoes() {
+  var nome = document.getElementById("inp-nome").value.trim();
+  if (!nome) {
+    document.getElementById("erro-login").style.display = "block";
+    document.getElementById("inp-nome").focus();
+    return;
+  }
+  document.getElementById("erro-login").style.display = "none";
+  nomeAluno  = nome;
+  turmaAluno = document.getElementById("inp-turma").value.trim();
+  document.getElementById("nome-header").textContent = "👤 " + nomeAluno;
+  irParaTela("t-instrucoes");
+}
+
+function irParaDashLogin() {
+  document.getElementById("inp-senha").value = "";
+  document.getElementById("erro-senha").style.display = "none";
+  irParaTela("t-dash-login");
+}
+
+/* ════════════════════════════════════════
+   EMBARALHAR
+════════════════════════════════════════ */
+function embaralhar(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* ════════════════════════════════════════
+   INICIAR PROVA
+════════════════════════════════════════ */
+function iniciarProva() {
+  baralho = embaralhar(QUESTOES).map(function(q) {
+    var pares = q.opts.map(function(o, i) {
+      return {txt: o, certa: i === q.gabarito};
+    });
+    var sp = embaralhar(pares);
+    return {
+      id: q.id,
+      txt: q.txt,
+      opcoes: sp.map(function(p) { return p.txt; }),
+      certa: sp.findIndex(function(p) { return p.certa; })
+    };
+  });
+
+  respostas     = {};
+  questaoAtual  = 0;
+  tempoRestante = TEMPO_MAX;
+  ncolas        = 0;
+  cancelada     = false;
+  provaAtiva    = true;
+
+  montarBolinhas();
+  renderizarQuestao();
+  iniciarRelogio();
+  ativarAntiCola();
+  irParaTela("t-prova");
+}
+
+/* ════════════════════════════════════════
+   RELÓGIO
+════════════════════════════════════════ */
+function iniciarRelogio() {
+  clearInterval(relogioID);
+  atualizarRelogio();
+  relogioID = setInterval(function() {
+    tempoRestante--;
+    atualizarRelogio();
+    if (tempoRestante <= 0) {
+      clearInterval(relogioID);
+      finalizarProva(false);
+    }
+  }, 1000);
+}
+
+function atualizarRelogio() {
+  var m   = Math.floor(tempoRestante / 60);
+  var s   = tempoRestante % 60;
+  var txt = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  var el  = document.getElementById("timer");
+  el.textContent = txt;
+  el.className   = "";
+  if (tempoRestante <= 300 && tempoRestante > 60) el.className = "amarelo";
+  if (tempoRestante <= 60)  el.className = "vermelho";
+}
+
+/* ════════════════════════════════════════
+   ANTI-COLA
+════════════════════════════════════════ */
+function ativarAntiCola() {
+  document.addEventListener("visibilitychange", aoEsconder);
+  window.addEventListener("blur", aoPerderFoco);
+  document.addEventListener("contextmenu", bloquearMenu);
+  document.addEventListener("keydown", bloquearTeclas);
+  window.addEventListener("beforeunload", aoFechar);
+}
+
+function desativarAntiCola() {
+  document.removeEventListener("visibilitychange", aoEsconder);
+  window.removeEventListener("blur", aoPerderFoco);
+  document.removeEventListener("contextmenu", bloquearMenu);
+}
+
+function aoEsconder()    { if (document.hidden && provaAtiva) detectarCola(); }
+function aoPerderFoco()  { if (provaAtiva) detectarCola(); }
+function bloquearMenu(e) { if (provaAtiva) e.preventDefault(); }
+function bloquearTeclas(e) {
+  if (!provaAtiva) return;
+  if (e.key === "F12") e.preventDefault();
+  if (e.ctrlKey && "uUiIjJ".indexOf(e.key) !== -1) e.preventDefault();
+}
+function aoFechar(e) {
+  if (provaAtiva) { e.preventDefault(); e.returnValue = ""; }
+}
+
+function detectarCola() {
+  ncolas++;
+  if (ncolas === 1) {
+    abrirOverlay("pop-aviso");
+  } else {
+    provaAtiva = false;
+    cancelada  = true;
+    clearInterval(relogioID);
+    desativarAntiCola();
+    salvarResultado(true);
+    abrirOverlay("pop-cancelado");
+  }
+}
+
+function fecharAviso() {
+  fecharOverlay("pop-aviso");
+  window.focus();
+}
+
+function verResultadoCancelado() {
+  fecharOverlay("pop-cancelado");
+  mostrarResultado();
+}
+
+/* ════════════════════════════════════════
+   RENDERIZAR QUESTÃO
+════════════════════════════════════════ */
+function renderizarQuestao() {
+  var q   = baralho[questaoAtual];
+  var sel = respostas[questaoAtual];
+
+  var html = '<div class="q-card">'
+    + '<div class="q-tag">Questão ' + (questaoAtual + 1) + ' de ' + baralho.length + '</div>'
+    + '<div class="q-txt">' + q.txt + '</div>'
+    + '<div class="alternativas">';
+
+  for (var i = 0; i < q.opcoes.length; i++) {
+    var marcada = (sel === i) ? " marcada" : "";
+    html += '<div class="alt' + marcada + '" onclick="marcarResposta(' + questaoAtual + ',' + i + ',this)">'
+      + '<span class="letra">' + LETRAS[i] + '</span>'
+      + '<span>' + q.opcoes[i] + '</span>'
+      + '</div>';
+  }
+
+  html += '</div></div>';
+  document.getElementById("questao-container").innerHTML = html;
+
+  document.getElementById("btn-ant").disabled = (questaoAtual === 0);
+  document.getElementById("btn-prox").textContent =
+    questaoAtual === baralho.length - 1 ? "Ver resumo" : "Próxima →";
+
+  var pct = ((questaoAtual + 1) / baralho.length) * 100;
+  document.getElementById("prog-fill").style.width = pct + "%";
+  document.getElementById("prog-txt").textContent =
+    "Questão " + (questaoAtual + 1) + " de " + baralho.length;
+
+  atualizarContador();
+  atualizarBolinhas();
+}
+
+function marcarResposta(qi, oi, el) {
+  respostas[qi] = oi;
+  var alts = document.querySelectorAll(".alt");
+  for (var i = 0; i < alts.length; i++) alts[i].classList.remove("marcada");
+  el.classList.add("marcada");
+  atualizarContador();
+  atualizarBolinhas();
+}
+
+function atualizarContador() {
+  document.getElementById("contador").textContent =
+    Object.keys(respostas).length + " de " + baralho.length + " respondidas";
+}
+
+function navegar(dir) {
+  var prox = questaoAtual + dir;
+  if (prox < 0) return;
+  if (prox >= baralho.length) { pedirEnvio(); return; }
+  questaoAtual = prox;
+  renderizarQuestao();
+}
+
+/* ════════════════════════════════════════
+   BOLINHAS
+════════════════════════════════════════ */
+function montarBolinhas() {
+  var wrap = document.getElementById("bolinhas");
+  wrap.innerHTML = "";
+  for (var i = 0; i < baralho.length; i++) {
+    var d = document.createElement("div");
+    d.className   = "bolinha";
+    d.id          = "bol-" + i;
+    d.textContent = i + 1;
+    (function(idx) {
+      d.onclick = function() { questaoAtual = idx; renderizarQuestao(); };
+    })(i);
+    wrap.appendChild(d);
+  }
+}
+
+function atualizarBolinhas() {
+  for (var i = 0; i < baralho.length; i++) {
+    var d = document.getElementById("bol-" + i);
+    if (!d) continue;
+    d.className = "bolinha";
+    if (respostas[i] !== undefined) d.classList.add("respondida");
+    if (i === questaoAtual) d.classList.add("atual");
+  }
+}
+
+/* ════════════════════════════════════════
+   ENVIO
+════════════════════════════════════════ */
+function pedirEnvio() {
+  var resp  = Object.keys(respostas).length;
+  var branco = baralho.length - resp;
+  var msg   = "Você respondeu <strong>" + resp + "</strong> de <strong>"
+    + baralho.length + "</strong> questões.";
+  if (branco > 0)
+    msg += "<br><span style='color:var(--danger)'>⚠️ " + branco + " questão(ões) em branco.</span>";
+  msg += "<br><br>Deseja confirmar o envio?";
+  document.getElementById("msg-envio").innerHTML = msg;
+  abrirOverlay("pop-envio");
+}
+
+function confirmarEnvio() {
+  fecharOverlay("pop-envio");
+  finalizarProva(false);
+}
+
+function finalizarProva(auto) {
+  provaAtiva = false;
+  clearInterval(relogioID);
+  desativarAntiCola();
+  salvarResultado(false);
+  mostrarResultado();
+}
+
+/* ════════════════════════════════════════
+   PONTUAÇÃO E RESULTADO
+════════════════════════════════════════ */
+function calcularPontos() {
+  var acertos = 0, erros = 0, branco = 0;
+  for (var i = 0; i < baralho.length; i++) {
+    if (respostas[i] === undefined) branco++;
+    else if (respostas[i] === baralho[i].certa) acertos++;
+    else erros++;
+  }
+  return {acertos: acertos, erros: erros, branco: branco};
+}
+
+function mostrarResultado() {
+  var p   = calcularPontos();
+  var pct = Math.round((p.acertos / baralho.length) * 100);
+
+  document.getElementById("res-nome").textContent    = nomeAluno;
+  document.getElementById("res-nota").textContent    = p.acertos + "/20 (" + pct + "%)";
+  document.getElementById("res-acertos").textContent = p.acertos;
+  document.getElementById("res-erros").textContent   = p.erros;
+  document.getElementById("res-branco").textContent  = p.branco;
+
+  if (cancelada) {
+    document.getElementById("res-icone").textContent  = "🚫";
+    document.getElementById("res-titulo").textContent = "Prova Encerrada por Violação";
+    document.getElementById("res-msg").textContent    = "";
+    document.getElementById("res-cancel").style.display = "block";
+  } else {
+    var msg = "";
+    if (pct >= 80)      msg = "🏆 Excelente desempenho! Parabéns!";
+    else if (pct >= 60) msg = "👍 Bom desempenho! Continue estudando.";
+    else if (pct >= 40) msg = "📚 Desempenho regular. Revise os conteúdos!";
+    else                msg = "💪 Continue praticando! Você consegue melhorar.";
+    document.getElementById("res-icone").textContent  = "🎉";
+    document.getElementById("res-titulo").textContent = "Prova Enviada!";
+    document.getElementById("res-msg").textContent    = msg;
+    document.getElementById("res-cancel").style.display = "none";
+  }
+
+  irParaTela("t-resultado");
+}
+
+/* ════════════════════════════════════════
+   LOCALSTORAGE
+════════════════════════════════════════ */
+function salvarResultado(foiCancelada) {
+  var p    = calcularPontos();
+  var used = TEMPO_MAX - tempoRestante;
+  var mu   = Math.floor(used / 60);
+  var su   = used % 60;
+  var reg  = {
+    id:        Date.now(),
+    nome:      nomeAluno,
+    turma:     turmaAluno || "—",
+    dataHora:  new Date().toLocaleString("pt-BR"),
+    tempo:     (mu < 10 ? "0" : "") + mu + ":" + (su < 10 ? "0" : "") + su,
+    acertos:   p.acertos,
+    erros:     p.erros,
+    branco:    p.branco,
+    pct:       Math.round((p.acertos / baralho.length) * 100),
+    cancelada: foiCancelada,
+    colas:     ncolas
+  };
+  var dados = getDados();
+  dados.push(reg);
+  localStorage.setItem("simulado_final", JSON.stringify(dados));
+}
+
+function getDados() {
+  try { return JSON.parse(localStorage.getItem("simulado_final")) || []; }
+  catch(e) { return []; }
+}
+
+/* ════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════ */
+function entrarDash() {
+  var s = document.getElementById("inp-senha").value;
+  if (s === SENHA_DASH) {
+    document.getElementById("erro-senha").style.display = "none";
+    carregarDash();
+    irParaTela("t-dashboard");
+  } else {
+    document.getElementById("erro-senha").style.display = "block";
+    document.getElementById("inp-senha").value = "";
+    document.getElementById("inp-senha").focus();
+  }
+}
+
+function carregarDash() {
+  var dados  = getDados();
+  var body   = document.getElementById("tabela-body");
+  var vazio  = document.getElementById("dash-vazio");
+  var tabela = document.getElementById("tabela");
+  body.innerHTML = "";
+
+  if (!dados.length) {
+    tabela.style.display = "none";
+    vazio.style.display  = "block";
+    document.getElementById("dash-stats").innerHTML = "";
+    return;
+  }
+
+  tabela.style.display = "table";
+  vazio.style.display  = "none";
+
+  var total    = dados.length;
+  var somaP    = 0;
+  var melhor   = 0;
+  var aprovados = 0;
+  var colas     = 0;
+
+  for (var i = 0; i < dados.length; i++) {
+    somaP += dados[i].pct;
+    if (dados[i].pct > melhor) melhor = dados[i].pct;
+    if (dados[i].pct >= 60 && !dados[i].cancelada) aprovados++;
+    if (dados[i].cancelada) colas++;
+  }
+
+  var media = (somaP / total).toFixed(1);
+
+  document.getElementById("dash-stats").innerHTML =
+    cartao(total,     "Total de Alunos") +
+    cartao(media+"%", "Média Geral")     +
+    cartao(melhor+"%","Melhor Nota")     +
+    cartao(aprovados, "Aprovados (≥60%)")+
+    cartao(colas,     "Encerradas por Cola");
+
+  var lista = dados.slice().reverse();
+  for (var j = 0; j < lista.length; j++) {
+    var r = lista[j];
+    var status = r.cancelada
+      ? bdg("b-verm","Encerrada (cola)")
+      : r.pct >= 80  ? bdg("b-verde","Excelente")
+      : r.pct >= 60  ? bdg("b-verde","Aprovado")
+      :                bdg("b-warn", "Reprovado");
+
+    var nota = r.pct >= 60
+      ? bdg("b-verde", r.acertos+"/20 ("+r.pct+"%)")
+      : bdg("b-verm",  r.acertos+"/20 ("+r.pct+"%)");
+
+    var cola = r.colas > 0
+      ? bdg("b-verm",  "⚠️ "+r.colas+"x")
+      : bdg("b-verde", "Sem ocorrências");
+
+    body.innerHTML += "<tr>"
+      +"<td>"+(dados.length-j)+"</td>"
+      +"<td><strong>"+r.nome+"</strong></td>"
+      +"<td>"+r.turma+"</td>"
+      +"<td>"+r.dataHora+"</td>"
+      +"<td>"+r.tempo+"</td>"
+      +"<td style='color:var(--success);font-weight:700'>"+r.acertos+"</td>"
+      +"<td style='color:var(--danger);font-weight:700'>"+r.erros+"</td>"
+      +"<td>"+r.branco+"</td>"
+      +"<td>"+nota+"</td>"
+      +"<td>"+status+"</td>"
+      +"<td>"+cola+"</td>"
+      +"</tr>";
+  }
+}
+
+function cartao(v, l) {
+  return '<div class="stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';
+}
+function bdg(cls, txt) {
+  return '<span class="badge '+cls+'">'+txt+'</span>';
+}
+
+function limparDados() {
+  if (confirm("Apagar TODOS os resultados? Esta ação não pode ser desfeita.")) {
+    localStorage.removeItem("simulado_final");
+    carregarDash();
+  }
+}
+
+function exportarCSV() {
+  var dados = getDados();
+  if (!dados.length) { alert("Nenhum dado para exportar."); return; }
+  var cab = ["#","Nome","Turma","Data/Hora","Tempo","Acertos","Erros","Branco","Nota (%)","Status","Cola"];
+  var linhas = [];
+  for (var i = 0; i < dados.length; i++) {
+    var r = dados[i];
+    linhas.push([
+      i+1, r.nome, r.turma, r.dataHora, r.tempo,
+      r.acertos, r.erros, r.branco, r.pct,
+      r.cancelada ? "Encerrada (cola)" : (r.pct >= 60 ? "Aprovado" : "Reprovado"),
+      r.colas
+    ]);
+  }
+  var csv = [cab].concat(linhas).map(function(row) {
+    return row.map(function(v) {
+      return '"' + String(v).replace(/"/g,'""') + '"';
+    }).join(",");
+  }).join("\n");
+
+  var blob = new Blob(["\uFEFF" + csv], {type:"text/csv;charset=utf-8;"});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement("a");
+  a.href     = url;
+  a.download = "resultados_" + new Date().toISOString().slice(0,10) + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ════════════════════════════════════════
+   OVERLAYS
+════════════════════════════════════════ */
+function abrirOverlay(id)  { document.getElementById(id).classList.add("aberto"); }
+function fecharOverlay(id) { document.getElementById(id).classList.remove("aberto"); }
+</script>
+</body>
+</html>
